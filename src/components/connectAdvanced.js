@@ -38,14 +38,11 @@ const initStateUpdates = () => [null, 0]
 // `connect` to perform sync updates to a ref to save the latest props after
 // a render is actually committed to the DOM.
 
-const a = useLayoutEffect.bind(this)
-const b = useEffect.bind(this)
-
 const useIsomorphicLayoutEffect = () => {
   return typeof window !== 'undefined' &&
     !window.__force_server_side_rendering__
-    ? a
-    : b
+    ? useLayoutEffect.bind(this)
+    : useEffect.bind(this)
 }
 
 export default function connectAdvanced(
