@@ -32,6 +32,9 @@ function storeStateUpdatesReducer(state, action) {
 
 const initStateUpdates = () => [null, 0]
 
+const reactUseLayoutEffect = useLayoutEffect
+const reactUseEffect = useEffect
+
 export default function connectAdvanced(
   /*
     selectorFactory is a func that is responsible for returning the selector function used to
@@ -84,6 +87,18 @@ export default function connectAdvanced(
     ...connectOptions
   } = {}
 ) {
+  // React currently throws a warning when using useLayoutEffect on the server.
+  // To get around it, we can conditionally useEffect on the server (no-op) and
+  // useLayoutEffect in the browser. We need useLayoutEffect because we want
+  // `connect` to perform sync updates to a ref to save the latest props after
+  // a render is actually committed to the DOM.
+
+  const isomorphicLayoutEffect =
+    typeof window !== 'undefined' &&
+    window.__force_server_side_rendering__ != true
+      ? reactUseLayoutEffect
+      : reactUseEffect
+
   invariant(
     renderCountProp === undefined,
     `renderCountProp is removed. render counting is built into the latest React Dev Tools profiling extension`
@@ -271,17 +286,6 @@ export default function connectAdvanced(
       // We need this to execute synchronously every time we re-render. However, React warns
       // about useLayoutEffect in SSR, so we try to detect environment and fall back to
       // just useEffect instead to avoid the warning, since neither will run anyway.
-
-      // React currently throws a warning when using useLayoutEffect on the server.
-      // To get around it, we can conditionally useEffect on the server (no-op) and
-      // useLayoutEffect in the browser. We need useLayoutEffect because we want
-      // `connect` to perform sync updates to a ref to save the latest props after
-      // a render is actually committed to the DOM.
-      const isomorphicLayoutEffect =
-        typeof window !== 'undefined' && !window.__force_server_side_rendering__
-          ? useLayoutEffect
-          : useEffect
-
       isomorphicLayoutEffect(() => {
         // We want to capture the wrapper props and child props we used for later comparisons
         lastWrapperProps.current = wrapperProps
