@@ -40,9 +40,11 @@ const reactUseEffect = useEffect
 // useLayoutEffect in the browser. We need useLayoutEffect because we want
 // `connect` to perform sync updates to a ref to save the latest props after
 // a render is actually committed to the DOM.
-
-const isomorphicLayoutEffect = () => {
-  return window && !window.__force_server_side_rendering__
+const useIsomorphicLayoutEffect = () => {
+  return typeof window !== 'undefined' &&
+    typeof window.document !== 'undefined' &&
+    typeof window.document.createElement !== 'undefined' &&
+    !window.__force_server_side_rendering__
     ? reactUseLayoutEffect
     : reactUseEffect
 }
@@ -167,8 +169,8 @@ export default function connectAdvanced(
         // Distinguish between actual "data" props that were passed to the wrapper component,
         // and values needed to control behavior (forwarded refs, alternate context instances).
         // To maintain the wrapperProps object reference, memoize this destructuring.
-        const { context, forwardedRef, ...wrapperProps } = props
-        return [context, forwardedRef, wrapperProps]
+        const { forwardedRef, ...wrapperProps } = props
+        return [props.context, forwardedRef, wrapperProps]
       }, [props])
 
       const ContextToUse = useMemo(() => {
@@ -286,7 +288,8 @@ export default function connectAdvanced(
       // We need this to execute synchronously every time we re-render. However, React warns
       // about useLayoutEffect in SSR, so we try to detect environment and fall back to
       // just useEffect instead to avoid the warning, since neither will run anyway.
-      isomorphicLayoutEffect()(() => {
+
+      useIsomorphicLayoutEffect()(() => {
         // We want to capture the wrapper props and child props we used for later comparisons
         lastWrapperProps.current = wrapperProps
         lastChildProps.current = actualChildProps
@@ -300,7 +303,7 @@ export default function connectAdvanced(
       })
 
       // Our re-subscribe logic only runs when the store/subscription setup changes
-      isomorphicLayoutEffect()(() => {
+      useIsomorphicLayoutEffect()(() => {
         // If we're not subscribed to the store, nothing to do here
         if (!shouldHandleStateChanges) return
 

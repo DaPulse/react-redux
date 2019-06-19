@@ -1,8 +1,9 @@
 ---
-id: why-use-react-redux
+id: version-7.1-why-use-react-redux
 title: Why Use React Redux?
 hide_title: true
 sidebar_label: Why Use React Redux?
+original_id: why-use-react-redux
 ---
 
 # Why Use React Redux?
