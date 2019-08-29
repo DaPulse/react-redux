@@ -5,7 +5,7 @@ import ReactDOM from 'react-dom'
 import { createStore } from 'redux'
 import { Provider, connect, ReactReduxContext } from '../../src/index.js'
 import * as rtl from '@testing-library/react'
-import 'jest-dom/extend-expect'
+import '@testing-library/jest-dom/extend-expect'
 
 const createExampleTextReducer = () => (state = 'example text') => state
 
@@ -311,6 +311,44 @@ describe('React', () => {
       expect(spy).toHaveBeenCalledTimes(0)
       ReactDOM.unmountComponentAtNode(div)
       expect(spy).toHaveBeenCalledTimes(1)
+    })
+
+    it('should handle store and children change in a the same render', () => {
+      const reducerA = (state = { nestedA: { value: 'expectedA' } }) => state
+      const reducerB = (state = { nestedB: { value: 'expectedB' } }) => state
+
+      const storeA = createStore(reducerA)
+      const storeB = createStore(reducerB)
+
+      @connect(state => ({ value: state.nestedA.value }))
+      class ComponentA extends Component {
+        render() {
+          return <div data-testid="value">{this.props.value}</div>
+        }
+      }
+
+      @connect(state => ({ value: state.nestedB.value }))
+      class ComponentB extends Component {
+        render() {
+          return <div data-testid="value">{this.props.value}</div>
+        }
+      }
+
+      const { getByTestId, rerender } = rtl.render(
+        <Provider store={storeA}>
+          <ComponentA />
+        </Provider>
+      )
+
+      expect(getByTestId('value')).toHaveTextContent('expectedA')
+
+      rerender(
+        <Provider store={storeB}>
+          <ComponentB />
+        </Provider>
+      )
+
+      expect(getByTestId('value')).toHaveTextContent('expectedB')
     })
   })
 })

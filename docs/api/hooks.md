@@ -192,7 +192,7 @@ export const TodoCounterForIsDoneValue = ({ isDone }) => {
   )
 
   const numOfTodosWithIsDoneValue = useSelector(state =>
-    selectNumOfTodosWithIsDoneValue(state, isDone)
+    selectNumOfTodosWithIsDone(state, isDone)
   )
 
   return <div>{numOfTodosWithIsDoneValue}</div>
@@ -292,6 +292,40 @@ export const CounterComponent = ({ value }) => {
   // EXAMPLE ONLY! Do not do this in a real app.
   // The component will not automatically update if the store state changes
   return <div>{store.getState()}</div>
+}
+```
+
+
+## Custom context
+
+The `<Provider>` component allows you to specify an alternate context via the `context` prop. This is useful if you're building a complex reusable component, and you don't want your store to collide with any Redux store your consumers' applications might use.
+
+To access an alternate context via the hooks API, use the hook creator functions:
+
+```js
+import React from 'react'
+import {
+  Provider,
+  createStoreHook,
+  createDispatchHook,
+  createSelectorHook
+} from 'react-redux'
+
+const MyContext = React.createContext(null)
+
+// Export your custom hooks if you wish to use them in other files.
+export const useStore = createStoreHook(MyContext)
+export const useDispatch = createDispatchHook(MyContext)
+export const useSelector = createSelectorHook(MyContext)
+
+const myStore = createStore(rootReducer)
+
+export function MyProvider({ children }) {
+  return (
+    <Provider context={MyContext} store={myStore}>
+      {children}
+    </Provider>
+  )
 }
 ```
 
